@@ -1,53 +1,86 @@
 import { View, Text, StyleSheet, TouchableOpacity, Keyboard } from 'react-native';
-import React, { useState } from 'react';
+import React from 'react';
 import Box from '../Components/Box';
 import Input from '../Components/Input';
-import { isValidEmail, isAllFieldsFill, showError } from '../Utils/methods';
+import { isValidEmail, isAllFieldsFill } from '../Utils/methods';
 import SocialIcons from '../Components/SocialIcons';
 import CustomButton from '../Components/CustomButton';
 import COLORS from '../Utils/color';
+import { useDispatch, useSelector } from 'react-redux';
+import { setEmail, setPassword, setError } from '../Redux/actions';
 
 const Login = ({ navigation }) => {
 
-    const [userInfo, setUserInfo] = useState({
-        email: "",
-        password: "",
-    });
-
-    const { email, password } = userInfo;
-    const [error, setError] = useState('');
-
-    const handleOnChangeText = (text, fieldName) => {
-        setUserInfo({ ...userInfo, [fieldName]: text });
-    };
+    const { email, password, error, mailArr, passwordArr } = useSelector(state => state.userReducer);
+    const dispatch = useDispatch();
 
     const isValidForm = () => {
-        if (!isAllFieldsFill(userInfo))
-            return showError('Required all fields!', setError);
+        const userInfo = {
+            email: email,
+            password: password
+        }
+        if (!isAllFieldsFill(userInfo)) {
+            dispatch(setError('Required all fields!'));
+            setTimeout(() => {
+                dispatch(setError(''));
+            }, 3000);
+            return false;
+        }
 
-        if (!email.trim())
-            return showError('Please input email!', setError);
+        if (!email.trim()) {
+            dispatch(setError('Please input email!'));
+            setTimeout(() => {
+                dispatch(setError(''));
+            }, 3000);
+            return false;
+        }
 
-        if (!isValidEmail(email))
-            return showError('Invalid email!', setError);
+        if (!isValidEmail(email)) {
+            dispatch(setError('Invalid email!'));
+            setTimeout(() => {
+                dispatch(setError(''));
+            }, 3000);
+            return false;
+        }
 
-        if (!password.trim() || password.length < 5)
-            return showError('Password is less than 5 characters!', setError);
+        if (!password.trim() || password.length < 5) {
+            dispatch(setError('Password is less than 5 characters!'));
+            setTimeout(() => {
+                dispatch(setError(''));
+            }, 3000);
+            return false;
+        }
 
         return true;
     }
 
     const submitForm = () => {
         Keyboard.dismiss();
+        console.log(email);
         if (isValidForm()) {
-            //navigation.navigate('BottomTabNav', { paramKey: email });
-            navigation.navigate("BottomTabNav", {
-                screen: "Home",
-                params: {
-                    paramKey: email
-                },
-              });
+
+            for (i = 0, j = 0; i < mailArr.length; i++, j++) {
+                if (email == mailArr[i] && password == passwordArr[j]) {
+                    //login
+                    navigation.navigate("BottomTabNav", {
+                        screen: "Home",
+                        params: {
+                            paramKey: email
+                        },
+                    });
+                    dispatch(setEmail(''));
+                    dispatch(setPassword(''));
+                }
+                else {
+                    dispatch(setError('Wrong cerdantials!'));
+                    setTimeout(() => {
+                        dispatch(setError(''));
+                    }, 3000);
+                }
+            }
+
         }
+
     }
 
     return (
@@ -67,7 +100,7 @@ const Login = ({ navigation }) => {
             <View style={styles.formContainer}>
                 <Input
                     value={email}
-                    onChangeText={text => handleOnChangeText(text, 'email')}
+                    onChangeText={(value) => dispatch(setEmail(value))}
                     iconName="email-outline"
                     placeholder="Enter your email address"
                     keyboardType='email-address'
@@ -76,7 +109,7 @@ const Login = ({ navigation }) => {
 
                 <Input
                     value={password}
-                    onChangeText={text => handleOnChangeText(text, 'password')}
+                    onChangeText={(value) => dispatch(setPassword(value))}
                     iconName="lock-outline"
                     placeholder="Enter your password"
                     autoCapitalize='none'
@@ -92,9 +125,9 @@ const Login = ({ navigation }) => {
                 </Text>
             </TouchableOpacity>
 
-            <CustomButton func={submitForm} text="Login"/>
+            <CustomButton func={submitForm} text="Login" />
 
-            <SocialIcons text="Signin"/>
+            <SocialIcons text="Signin" />
 
             <TouchableOpacity style={styles.footer}>
                 <View>

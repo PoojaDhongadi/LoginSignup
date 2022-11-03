@@ -1,59 +1,114 @@
-import { View, Text, StyleSheet, TouchableOpacity, Keyboard, ScrollView } from 'react-native';
-import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Keyboard } from 'react-native';
+import React from 'react';
 import Box from '../Components/Box';
 import Input from '../Components/Input';
-import { isValidEmail, isAllFieldsFill, showError } from '../Utils/methods';
+import {
+  isValidEmail,
+  isAllFieldsFill,
+  isContainsUppercase,
+  isContainsLowercase,
+  isContainsNumber,
+  isContainsSymbol
+} from '../Utils/methods';
 import SocialIcons from '../Components/SocialIcons';
 import CustomButton from '../Components/CustomButton';
 import COLORS from '../Utils/color';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  setConfirmPassword,
+  setEmail,
+  setFullName,
+  setPassword,
+  setError,
+  setUserMails,
+  setUserPasswords
+} from '../Redux/actions';
+
 
 const Signup = ({ navigation }) => {
 
-  const [userInfo, setUserInfo] = useState({
-    fullName: "",
-    email: "",
-    password: "",
-    confirmPassword: ""
-  });
+  const { email, password, fullName, confirmPassword, error, mailArr, passwordArr } = useSelector(state => state.userReducer);
+  const dispatch = useDispatch();
 
-  const { fullName, email, password, confirmPassword } = userInfo;
-  const [error, setError] = useState('');
-
-  const handleOnChangeText = (text, fieldName) => {
-    setUserInfo({ ...userInfo, [fieldName]: text });
-  };
 
   const isValidForm = () => {
-    if (!isAllFieldsFill(userInfo))
-      return showError('Required all fields!', setError);
+    const userInfo = {
+      email: email,
+      password: password,
+      fullName: fullName,
+      confirmPassword: confirmPassword
+    }
+    if (!isAllFieldsFill(userInfo)) {
+      dispatch(setError('Required all fields!'));
+      setTimeout(() => {
+        dispatch(setError(''));
+      }, 3000);
+      return false;
+    }
 
-    if (!fullName.trim())
-      return showError('Please input name!', setError);
+    if (!fullName.trim()) {
+      dispatch(setError('Please input name!'));
+      setTimeout(() => {
+        dispatch(setError(''));
+      }, 3000);
+      return false;
+    }
 
-    if (!isValidEmail(email))
-      return showError('Invalid email!', setError);
+    if (!isValidEmail(email)) {
+      dispatch(setError('Invalid email!'));
+      setTimeout(() => {
+        dispatch(setError(''));
+      }, 3000);
+      return false;
+    }
 
-    if (!password.trim() || password.length < 5)
-      return showError('Password is less than 5 characters!', setError);
+    if (!password.trim() || password.length < 5) {
+      dispatch(setError('Password is less than 5 characters!'));
+      setTimeout(() => {
+        dispatch(setError(''));
+      }, 3000);
+      return false;
+    }
 
-    const isContainsUppercase = /^(?=.*[A-Z]).*$/;
-    if (!isContainsUppercase.test(password))
-      return showError('Password must have at least one Uppercase Character.', setError);
+    if (!isContainsUppercase(password)) {
+      dispatch(setError('Password must have at least one Uppercase Character.'));
+      setTimeout(() => {
+        dispatch(setError(''));
+      }, 3000);
+      return false;
+    }
 
-    const isContainsLowercase = /^(?=.*[a-z]).*$/;
-    if (!isContainsLowercase.test(password))
-      return showError('Password must have at least one Lowercase Character.', setError);
+    if (!isContainsLowercase(password)) {
+      dispatch(setError('Password must have at least one Lowercase Character.'));
+      setTimeout(() => {
+        dispatch(setError(''));
+      }, 3000);
+      return false;
+    }
 
-    const isContainsNumber = /^(?=.*[0-9]).*$/;
-    if (!isContainsNumber.test(password))
-      return showError('Password must contain at least one Digit.', setError);
+    if (!isContainsNumber(password)) {
+      dispatch(setError('Password must contain at least one Digit.'));
+      setTimeout(() => {
+        dispatch(setError(''));
+      }, 3000);
+      return false;
+    }
 
-    const isContainsSymbol = /^(?=.*[~`!@#$%^&*()--+={}\[\]|\\:;"'<>,.?/_₹]).*$/;
-    if (!isContainsSymbol.test(password))
-      return showError('Password must contain at least one Special Symbol.', setError);
+    if (!isContainsSymbol(password)) {
+      dispatch(setError('Password must contain at least one Special Symbol.'));
+      setTimeout(() => {
+        dispatch(setError(''));
+      }, 3000);
+      return false;
+    }
 
-    if (password !== confirmPassword)
-      return showError('Password does not match!', setError);
+    if (password !== confirmPassword) {
+      dispatch(setError('Password does not match!'));
+      setTimeout(() => {
+        dispatch(setError(''));
+      }, 3000);
+      return false;
+    }
 
     return true;
   }
@@ -61,17 +116,24 @@ const Signup = ({ navigation }) => {
   const submitForm = () => {
     Keyboard.dismiss();
     if (isValidForm()) {
-      //navigation.navigate('Home', { paramKey: userInfo.fullName })
       navigation.navigate("BottomTabNav", {
         screen: "Home",
         params: {
-            paramKey: fullName
+          paramKey: fullName
         },
       });
+      dispatch(setUserMails(email));
+      dispatch(setUserPasswords(password));
+      // console.log(mailArr);
+      // console.log(passwordArr);
+      dispatch(setFullName(''));
+      dispatch(setEmail(''));
+      dispatch(setPassword(''));
+      dispatch(setConfirmPassword(''));
     }
+
   }
 
-  //console.log(userInfo);
   return (
 
     <View style={styles.container}>
@@ -97,14 +159,14 @@ const Signup = ({ navigation }) => {
       <View style={styles.formContainer}>
         <Input
           value={fullName}
-          onChangeText={text => handleOnChangeText(text, 'fullName')}
+          onChangeText={(value) => dispatch(setFullName(value))}
           iconName="account-outline"
           placeholder="Enter your full name"
         />
 
         <Input
           value={email}
-          onChangeText={text => handleOnChangeText(text, 'email')}
+          onChangeText={(value) => dispatch(setEmail(value))}
           iconName="email-outline"
           placeholder="Enter your email address"
           keyboardType='email-address'
@@ -113,7 +175,7 @@ const Signup = ({ navigation }) => {
 
         <Input
           value={password}
-          onChangeText={text => handleOnChangeText(text, 'password')}
+          onChangeText={(value) => dispatch(setPassword(value))}
           iconName="lock-outline"
           placeholder="Enter your password"
           autoCapitalize='none'
@@ -122,7 +184,7 @@ const Signup = ({ navigation }) => {
 
         <Input
           value={confirmPassword}
-          onChangeText={text => handleOnChangeText(text, 'confirmPassword')}
+          onChangeText={(value) => dispatch(setConfirmPassword(value))}
           iconName="lock-outline"
           placeholder="Enter your password again"
           autoCapitalize='none'
@@ -130,9 +192,9 @@ const Signup = ({ navigation }) => {
         />
       </View>
 
-      <CustomButton func={submitForm} text="Sign up"/>
+      <CustomButton func={submitForm} text="Sign up" />
 
-      <SocialIcons text="Signup"/>
+      <SocialIcons text="Signup" />
 
       <TouchableOpacity style={styles.footer}>
         <View>

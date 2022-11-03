@@ -1,19 +1,31 @@
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Keyboard, ToastAndroid } from 'react-native'
-import React, { useState } from 'react';
-import { isValidEmail, showError } from '../Utils/methods';
+import React from 'react';
+import { isValidEmail } from '../Utils/methods';
 import COLORS from '../Utils/color';
+import { useDispatch, useSelector } from 'react-redux';
+import { setEmail, setError, setUserMails } from '../Redux/actions';
 
 function ForgotPassword() {
-    const [email, setEmail] = useState('');
-    const [error, setError] = useState('');
+    const { email, error, mailArr } = useSelector(state => state.userReducer);
+    const dispatch = useDispatch();
 
     const isValidForm = () => {
 
-        if (!email.trim())
-            return showError('Please input email!', setError);
+        if (!email.trim()){
+            dispatch(setError('Please input email!'));
+            setTimeout(() => {
+                dispatch(setError(''));
+            }, 3000);
+            return false;
+        }
 
-        if (!isValidEmail(email))
-            return showError('Invalid email!', setError);
+        if (!isValidEmail(email)){
+            dispatch(setError('Invalid email!'));
+            setTimeout(() => {
+                dispatch(setError(''));
+            }, 3000);
+            return false;
+        }
 
         return true;
     }
@@ -22,7 +34,10 @@ function ForgotPassword() {
         Keyboard.dismiss();
         if (isValidForm()) {
             ToastAndroid.show('Email has been sent',ToastAndroid.SHORT);
-            setEmail('');
+            //console.log(email);
+            dispatch(setEmail(''));
+            dispatch(setUserMails(email));
+            console.log(mailArr);
         }
     }
     
@@ -38,7 +53,7 @@ function ForgotPassword() {
                 style={styles.textinput}
                 keyboardType='email-address'
                 autoCapitalize='none'   
-                onChangeText={(email) => setEmail(email)} />
+                onChangeText={(value) => dispatch(setEmail(value))} />
             </View>
             
             <TouchableOpacity onPress={submitForm}>
