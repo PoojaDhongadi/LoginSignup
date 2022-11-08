@@ -1,10 +1,9 @@
-import { View, Text, StyleSheet, TouchableOpacity, Keyboard } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Keyboard, Alert } from 'react-native';
 import React from 'react';
 import Box from '../Components/Box';
 import Input from '../Components/Input';
 import {
   isValidEmail,
-  isAllFieldsFill,
   isContainsUppercase,
   isContainsLowercase,
   isContainsNumber,
@@ -19,109 +18,30 @@ import {
   setEmail,
   setFullName,
   setPassword,
-  setError,
   setUserMails,
-  setUserPasswords
+  setUserPasswords,
+  setValidMail,
+  setValidPassword,
+  setValidConfirmPassword
 } from '../Redux/actions';
 
 
 const Signup = ({ navigation }) => {
 
-  const { email, password, fullName, confirmPassword, error, mailArr, passwordArr } = useSelector(state => state.userReducer);
+  const { email, password, fullName, confirmPassword, validMail, validPassword, validConfirmPassword } = useSelector(state => state.userReducer);
   const dispatch = useDispatch();
-
-
-  const isValidForm = () => {
-    const userInfo = {
-      email: email,
-      password: password,
-      fullName: fullName,
-      confirmPassword: confirmPassword
-    }
-    if (!isAllFieldsFill(userInfo)) {
-      dispatch(setError('Required all fields!'));
-      setTimeout(() => {
-        dispatch(setError(''));
-      }, 3000);
-      return false;
-    }
-
-    if (!fullName.trim()) {
-      dispatch(setError('Please input name!'));
-      setTimeout(() => {
-        dispatch(setError(''));
-      }, 3000);
-      return false;
-    }
-
-    if (!isValidEmail(email)) {
-      dispatch(setError('Invalid email!'));
-      setTimeout(() => {
-        dispatch(setError(''));
-      }, 3000);
-      return false;
-    }
-
-    if (!password.trim() || password.length < 5) {
-      dispatch(setError('Password is less than 5 characters!'));
-      setTimeout(() => {
-        dispatch(setError(''));
-      }, 3000);
-      return false;
-    }
-
-    if (!isContainsUppercase(password)) {
-      dispatch(setError('Password must have at least one Uppercase Character.'));
-      setTimeout(() => {
-        dispatch(setError(''));
-      }, 3000);
-      return false;
-    }
-
-    if (!isContainsLowercase(password)) {
-      dispatch(setError('Password must have at least one Lowercase Character.'));
-      setTimeout(() => {
-        dispatch(setError(''));
-      }, 3000);
-      return false;
-    }
-
-    if (!isContainsNumber(password)) {
-      dispatch(setError('Password must contain at least one Digit.'));
-      setTimeout(() => {
-        dispatch(setError(''));
-      }, 3000);
-      return false;
-    }
-
-    if (!isContainsSymbol(password)) {
-      dispatch(setError('Password must contain at least one Special Symbol.'));
-      setTimeout(() => {
-        dispatch(setError(''));
-      }, 3000);
-      return false;
-    }
-
-    if (password !== confirmPassword) {
-      dispatch(setError('Password does not match!'));
-      setTimeout(() => {
-        dispatch(setError(''));
-      }, 3000);
-      return false;
-    }
-
-    return true;
-  }
 
   const submitForm = () => {
     Keyboard.dismiss();
-    if (isValidForm()) {
-      navigation.navigate("BottomTabNav", {
-        screen: "Home",
-        params: {
-          paramKey: fullName
-        },
-      });
+    if (!validMail || !validPassword || !validConfirmPassword || fullName.length == 0 || email.length == 0 || password.length == 0 || confirmPassword.length == 0) {
+      Alert.alert('Error', 'Feilds Required');
+    } else {
+      // navigation.navigate("BottomTabNav", {
+      //   screen: "Home",
+      //   params: {
+      //     paramKey: fullName
+      //   },
+      // });
       dispatch(setUserMails(email));
       dispatch(setUserPasswords(password));
       // console.log(mailArr);
@@ -130,8 +50,60 @@ const Signup = ({ navigation }) => {
       dispatch(setEmail(''));
       dispatch(setPassword(''));
       dispatch(setConfirmPassword(''));
+      Alert.alert(
+          "Success",
+          "Successfully Registerd",
+        [
+          {
+            text: "Go to Login",
+            onPress: () => navigation.navigate("Login"),
+          },
+          {
+            text: "Cancel",
+            onPress: () => console.log("Cancel Pressed"),
+          },
+        ]
+      );
+    }
+  }
+
+  const textInputChange = (val, type) => {
+
+    if (type == "FullName") {
+      dispatch(setFullName(val));
     }
 
+    if (type == "Email") {
+      if (!isValidEmail(email)) {
+        dispatch(setEmail(val));
+        dispatch(setValidMail(false));
+      }
+      else {
+        dispatch(setEmail(val));
+        dispatch(setValidMail(true));
+      }
+    }
+    if (type == "Password") {
+      dispatch(setPassword(val));
+      if (password.length < 5 || !isContainsUppercase(password) || !isContainsLowercase(password) || !isContainsNumber(password) || !isContainsSymbol(password)) {
+        dispatch(setValidPassword(false));
+      }
+      else {
+        dispatch(setValidPassword(true));
+      }
+    }
+
+    if (type == "ConfirmPassword") {
+      //console.log(password, confirmPassword,validConfirmPassword);
+      if (password !== confirmPassword) {
+        dispatch(setConfirmPassword(val));
+        dispatch(setValidConfirmPassword(false));
+      }
+      else {
+        dispatch(setConfirmPassword(val));
+        dispatch(setValidConfirmPassword(true));
+      }
+    }
   }
 
   return (
@@ -153,43 +125,46 @@ const Signup = ({ navigation }) => {
         <Text style={styles.signInText}>Create Account</Text>
       </View>
 
-      {error ? (
-        <Text style={{ color: COLORS.red, textAlign: 'center', fontSize: 18 }}>{error}</Text>
-      ) : null}
       <View style={styles.formContainer}>
         <Input
           value={fullName}
-          onChangeText={(value) => dispatch(setFullName(value))}
+          onChangeText={(val) => textInputChange(val, "FullName")}
           iconName="account-outline"
           placeholder="Enter your full name"
         />
 
         <Input
           value={email}
-          onChangeText={(value) => dispatch(setEmail(value))}
+          onChangeText={(val) => textInputChange(val, "Email")}
           iconName="email-outline"
           placeholder="Enter your email address"
           keyboardType='email-address'
           autoCapitalize='none'
         />
+        {validMail ? null : <Text style={styles.errorMsg}>Please enter a valid email</Text>}
 
         <Input
           value={password}
-          onChangeText={(value) => dispatch(setPassword(value))}
+          onChangeText={(val) => textInputChange(val, "Password")}
           iconName="lock-outline"
           placeholder="Enter your password"
           autoCapitalize='none'
           password
         />
+        {validPassword ? null :
+          <Text style={styles.errorMsg}>Minimum Password length is 5, should have atleast
+            one uppercase,lowercase,number,special character.</Text>
+        }
 
         <Input
           value={confirmPassword}
-          onChangeText={(value) => dispatch(setConfirmPassword(value))}
+          onChangeText={(val) => textInputChange(val, "ConfirmPassword")}
           iconName="lock-outline"
           placeholder="Enter your password again"
           autoCapitalize='none'
           password
         />
+        {validConfirmPassword ? null : <Text style={styles.errorMsg}>Password does not match!</Text>}
       </View>
 
       <CustomButton func={submitForm} text="Sign up" />
@@ -246,6 +221,11 @@ const styles = StyleSheet.create({
   footerText: {
     color: COLORS.black,
     fontSize: 18,
+  },
+  errorMsg: {
+    color: COLORS.red,
+    textAlign: 'center',
+    fontSize: 15,
   }
 });
 

@@ -1,9 +1,9 @@
 
 
-export const isAllFieldsFill = (obj) => {
-    //converts obj to array
-    return Object.values(obj).every(value => value.trim())
-}
+// export const isAllFieldsFill = (obj) => {
+//     //converts obj to array
+//     return Object.values(obj).every(value => value.trim())
+// }
 
 
 export const isValidEmail = (value) => {

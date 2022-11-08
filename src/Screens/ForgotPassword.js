@@ -1,70 +1,62 @@
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Keyboard, ToastAndroid } from 'react-native'
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Keyboard, ToastAndroid, Alert } from 'react-native'
 import React from 'react';
 import { isValidEmail } from '../Utils/methods';
 import COLORS from '../Utils/color';
 import { useDispatch, useSelector } from 'react-redux';
-import { setEmail, setError, setUserMails } from '../Redux/actions';
+import { setEmail, setValidMail } from '../Redux/actions';
 
 function ForgotPassword() {
-    const { email, error, mailArr } = useSelector(state => state.userReducer);
+    const { email, validMail } = useSelector(state => state.userReducer);
     const dispatch = useDispatch();
-
-    const isValidForm = () => {
-
-        if (!email.trim()){
-            dispatch(setError('Please input email!'));
-            setTimeout(() => {
-                dispatch(setError(''));
-            }, 3000);
-            return false;
-        }
-
-        if (!isValidEmail(email)){
-            dispatch(setError('Invalid email!'));
-            setTimeout(() => {
-                dispatch(setError(''));
-            }, 3000);
-            return false;
-        }
-
-        return true;
-    }
 
     const submitForm = () => {
         Keyboard.dismiss();
-        if (isValidForm()) {
-            ToastAndroid.show('Email has been sent',ToastAndroid.SHORT);
-            //console.log(email);
+        if (!validMail || email.length == 0) {
+            Alert.alert('Error','Email Required');
+        }
+        else {
+            ToastAndroid.show('Email has been sent', ToastAndroid.SHORT);
             dispatch(setEmail(''));
-            dispatch(setUserMails(email));
-            console.log(mailArr);
         }
     }
-    
+
+    const textInputChange = (val, type) => {
+
+        if (type == "Email") {
+            dispatch(setEmail(val));
+            if (!isValidEmail(email)) {
+                dispatch(setValidMail(false));
+            }
+            else {
+                dispatch(setValidMail(true));
+            }
+        }
+    }
+
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Forgot Password</Text>
             <Text style={styles.subtitle}>Enter your email address below and we will send
                 you an email with instructions on how to change your password.</Text>
             <View>
-                <TextInput 
-                value={email}
-                placeholder='Enter your email' 
-                style={styles.textinput}
-                keyboardType='email-address'
-                autoCapitalize='none'   
-                onChangeText={(value) => dispatch(setEmail(value))} />
+                <TextInput
+                    value={email}
+                    placeholder='Enter your email'
+                    style={styles.textinput}
+                    keyboardType='email-address'
+                    autoCapitalize='none'
+                    onChangeText={(val) => textInputChange(val, "Email")} />
+
+                {
+                    validMail ? null : <Text style={styles.errorMsg}>Please enter a valid email</Text>
+                }
             </View>
-            
+
             <TouchableOpacity onPress={submitForm}>
                 <View style={styles.button}>
                     <Text style={styles.buttonTxt}>SEND</Text>
                 </View>
             </TouchableOpacity>
-
-            {error ? (
-                <Text style={styles.errorMsg}>{error}</Text>
-            ) : null}
 
         </View>
     )
@@ -81,22 +73,22 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: COLORS.black,
         fontSize: 24,
-        textAlign:'center',
+        textAlign: 'center',
         marginVertical: 15,
     },
     subtitle: {
         fontSize: 16,
         fontWeight: '500',
-        color: COLORS.black
+        color: COLORS.black,
+        marginBottom: 30
     },
     textinput: {
         borderBottomColor: COLORS.black,
         borderBottomWidth: 2,
         fontSize: 18,
         paddingVertical: 10,
-        marginVertical: 30,
     },
-    button : {
+    button: {
         backgroundColor: COLORS.lightRed,
         padding: 15,
         borderRadius: 10,
@@ -111,10 +103,9 @@ const styles = StyleSheet.create({
         letterSpacing: 3
     },
     errorMsg: {
-        color: COLORS.red, 
-        textAlign: 'center', 
-        fontSize: 20, 
-        marginTop: 15
+        color: COLORS.red,
+        textAlign: 'center',
+        fontSize: 18,
     }
 });
 

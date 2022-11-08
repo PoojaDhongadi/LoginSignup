@@ -10,7 +10,7 @@ const Input = ({
   const [hidePassword, setHidePassword] = React.useState(password);
   
   return (
-    <View style={{marginBottom: 20}}>
+    <View style={{marginBottom: 10}}>
       <View style={style.inputContainer}>
         <Icon
           name={iconName}

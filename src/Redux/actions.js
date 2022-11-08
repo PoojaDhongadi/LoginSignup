@@ -2,9 +2,11 @@ export const SET_USER_EMAIL = 'SET_USER_EMAIL';
 export const SET_USER_PASSWORD = 'SET_USER_PASSWORD';
 export const SET_USER_FULLNAME = 'SET_USER_FULLNAME';
 export const SET_USER_CONFIRM_PASSWORD = 'SET_USER_CONFIRM_PASSWORD';
-export const SET_ERROR = 'SET_ERROR';
 export const SET_USER_MAILS = 'SET_USER_MAILS';
 export const SET_PASSWORDS = 'SET_PASSWORDS';
+export const SET_VALID_MAIL = 'SET_VALID_MAIL';
+export const SET_VALID_PASSWORD = 'SET_VALID_PASSWORD';
+export const SET_VALID_CONFIRM_PASSWORD = 'SET_VALID_CONFIRM_PASSWORD';
 
 export const setEmail = email => dispatch => {
     dispatch({
@@ -34,10 +36,24 @@ export const setConfirmPassword = confirmPassword => dispatch => {
     });
 };
 
-export const setError = error => dispatch => {
+export const setValidMail = validMail => dispatch => {
     dispatch({
-        type: SET_ERROR,
-        payload: error,
+        type: SET_VALID_MAIL,
+        payload: validMail,
+    });
+};
+
+export const setValidPassword = validPassword => dispatch => {
+    dispatch({
+        type: SET_VALID_PASSWORD,
+        payload: validPassword,
+    });
+};
+
+export const setValidConfirmPassword = validConfirmPassword => dispatch => {
+    dispatch({
+        type: SET_VALID_CONFIRM_PASSWORD,
+        payload: validConfirmPassword,
     });
 };
 
